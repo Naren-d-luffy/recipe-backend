@@ -13,12 +13,24 @@ export const createRecipe = async (req, res) => {
 // Get All Recipes
 export const getAllRecipes = async (req, res) => {
     try {
-        const recipes = await Recipe.find();
-        res.status(200).json(recipes);
+        const page = parseInt(req.query.page) || 1; // Default to page 1
+        const limit = parseInt(req.query.limit) || 10; // Default limit to 10 recipes per page
+        const skip = (page - 1) * limit;
+
+        const recipes = await Recipe.find().skip(skip).limit(limit);
+        const totalRecipes = await Recipe.countDocuments();
+
+        res.status(200).json({
+            totalRecipes,
+            totalPages: Math.ceil(totalRecipes / limit),
+            currentPage: page,
+            recipes
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // Get a Single Recipe
 export const getRecipeById = async (req, res) => {
